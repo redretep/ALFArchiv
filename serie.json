@@ -1,108 +1,108 @@
 {
-    "serie": "ALF",
-    "staffeln": {
-        "S1": [
-            {
-                "titel": "Hallo, da bin ich",
-                "link": "https://www.dailymotion.com/video/x8d22fx"
-            },
-            {
-                "titel": "Die Nacht, in der die Pizza kam",
-                "link": "https://www.dailymotion.com/video/x8d3pd5"
-            },
-            {
-                "titel": "Katzenjammer",
-                "link": "https://www.dailymotion.com/video/x8d4l7f"
-            },
-            {
-                "titel": "Großer Mann, was nun?",
-                "link": "https://www.dailymotion.com/video/x8d4l8d"
-            },
-            {
-                "titel": "Parasit mit Puderquaste",
-                "link": "https://www.dailymotion.com/video/x8d59o7"
-            },
-            {
-                "titel": "Ganz im Vertrauen",
-                "link": "https://www.dailymotion.com/video/x8d59oa"
-            },
-            {
-                "titel": "Ein Mädchen namens Rhonda",
-                "link": "https://www.dailymotion.com/video/x8d59o2"
-            },
-            {
-                "titel": "Eifersucht nach Noten",
-                "link": "https://www.dailymotion.com/video/x8d59nz"
-            },
-            {
-                "titel": "Der Sprung in die Tiefe",
-                "link": "https://www.dailymotion.com/video/x8d59o8"
-            },
-            {
-                "titel": "Die Spritztour",
-                "link": "https://www.dailymotion.com/video/x8d22fv"
-            },
-            {
-                "titel": "Fröhliche Ferien",
-                "link": "https://www.dailymotion.com/video/x8d2yrr"
-            },
-            {
-                "titel": "Eine schöne Bescherung",
-                "link": "https://www.dailymotion.com/video/x8d2ys9"
-            },
-            {
-                "titel": "Wenn Schwiegermutter kommt",
-                "link": "https://www.dailymotion.com/video/x8d2ysj"
-            },
-            {
-                "titel": "Die Fernsehfamilie",
-                "link": "https://www.dailymotion.com/video/x8d2ysi"
-            },
-            {
-                "titel": "Mit den besten Wünschen aus dem Jenseits",
-                "link": "https://www.dailymotion.com/video/x8d2ysz"
-            },
-            {
-                "titel": "Gestatten, mein Name ist Schlegel (1)",
-                "link": "https://www.dailymotion.com/video/x8d2yuq"
-            },
-            {
-                "titel": "Gestatten, mein Name ist Schlegel (2)",
-                "link": "https://www.dailymotion.com/video/x8d3pcd"
-            },
-            {
-                "titel": "Der Ausreißer",
-                "link": "https://www.dailymotion.com/video/x9npxwm"
-            },
-            {
-                "titel": "Ein Käfig für den Narren",
-                "link": "https://www.dailymotion.com/video/x9npy5s"
-            },
-            {
-                "titel": "Der Rollentausch",
-                "link": "https://www.dailymotion.com/video/x9npyhw"
-            },
-            {
-                "titel": "Das Fenster zum Garten",
-                "link": "https://www.dailymotion.com/video/x9npynw"
-            },
-            {
-                "titel": "Bühne frei für Spargelspitzen",
-                "link": "https://www.dailymotion.com/video/x9nt22q"
-            },
-            {
-                "titel": "Schulden und Sühne",
-                "link": "https://www.dailymotion.com/video/x9nt22o"
-            },
-            {
-                "titel": "Brians Sternstunde",
-                "link": "https://www.dailymotion.com/video/x9nneu4"
-            },
-            {
-                "titel": "Der Kammerjäger und die Kakerlake",
-                "link": "https://www.dailymotion.com/video/x9nt22s"
-            }
-        ],
+  "serie": "ALF",
+  "staffeln": {
+    "S1": [
+      {
+        "titel": "Hallo, da bin ich",
+        "link": "https://www.dailymotion.com/video/x8d22fx"
+      },
+      {
+        "titel": "Die Nacht, in der die Pizza kam",
+        "link": "https://www.dailymotion.com/video/x8d3pd5"
+      },
+      {
+        "titel": "Katzenjammer",
+        "link": "https://www.dailymotion.com/video/x8d4l7f"
+      },
+      {
+        "titel": "Großer Mann, was nun?",
+        "link": "https://www.dailymotion.com/video/x8d4l8d"
+      },
+      {
+        "titel": "Parasit mit Puderquaste",
+        "link": "https://www.dailymotion.com/video/x8d59o7"
+      },
+      {
+        "titel": "Ganz im Vertrauen",
+        "link": "https://www.dailymotion.com/video/x8d59oa"
+      },
+      {
+        "titel": "Ein Mädchen namens Rhonda",
+        "link": "https://www.dailymotion.com/video/x8d59o2"
+      },
+      {
+        "titel": "Eifersucht nach Noten",
+        "link": "https://www.dailymotion.com/video/x8d59nz"
+      },
+      {
+        "titel": "Der Sprung in die Tiefe",
+        "link": "https://www.dailymotion.com/video/x8d59o8"
+      },
+      {
+        "titel": "Die Spritztour",
+        "link": "https://www.dailymotion.com/video/x8d22fv"
+      },
+      {
+        "titel": "Fröhliche Ferien",
+        "link": "https://www.dailymotion.com/video/x8d2yrr"
+      },
+      {
+        "titel": "Eine schöne Bescherung",
+        "link": "https://www.dailymotion.com/video/x8d2ys9"
+      },
+      {
+        "titel": "Wenn Schwiegermutter kommt",
+        "link": "https://www.dailymotion.com/video/x8d2ysj"
+      },
+      {
+        "titel": "Die Fernsehfamilie",
+        "link": "https://www.dailymotion.com/video/x8d2ysi"
+      },
+      {
+        "titel": "Mit den besten Wünschen aus dem Jenseits",
+        "link": "https://www.dailymotion.com/video/x8d2ysz"
+      },
+      {
+        "titel": "Gestatten, mein Name ist Schlegel (1)",
+        "link": "https://www.dailymotion.com/video/x8d2yuq"
+      },
+      {
+        "titel": "Gestatten, mein Name ist Schlegel (2)",
+        "link": "https://www.dailymotion.com/video/x8d2yuq"
+      },
+      {
+        "titel": "Der Ausreißer",
+        "link": "https://www.dailymotion.com/video/x8d3pcd"
+      },
+      {
+        "titel": "Ein Käfig für den Narren",
+        "link": "https://www.dailymotion.com/video/x9npxwm"
+      },
+      {
+        "titel": "Der Rollentausch",
+        "link": "https://www.dailymotion.com/video/x9npy5s"
+      },
+      {
+        "titel": "Das Fenster zum Garten",
+        "link": "https://www.dailymotion.com/video/x9npyhw"
+      },
+      {
+        "titel": "Bühne frei für Spargelspitzen",
+        "link": "https://www.dailymotion.com/video/x9npynw"
+      },
+      {
+        "titel": "Schulden und Sühne",
+        "link": "https://www.dailymotion.com/video/x9nt22q"
+      },
+      {
+        "titel": "Brians Sternstunde",
+        "link": "https://www.dailymotion.com/video/x9nt22o"
+      },
+      {
+        "titel": "Der Kammerjäger und die Kakerlake",
+        "link": "https://www.dailymotion.com/video/x9nneu4"
+      }
+    ],
         "S2": [
             {
                 "titel": "Der Fremde (1)",
