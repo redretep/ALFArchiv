@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALF-Flix | Das ultimative Episoden-Archiv</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #141414; 
+            color: #ffffff; 
+            overflow-x: hidden;
+        }
+        .gradient-overlay {
+            background: linear-gradient(to top, #141414 0%, rgba(20, 20, 20, 0.8) 40%, rgba(20, 20, 20, 0) 100%);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #141414;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #333333;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #E50914;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+    <!-- Navigation Bar -->
+    <nav id="navbar" class="fixed top-0 w-full z-40 px-6 md:px-16 py-4 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent transition-colors duration-300">
+        <h1 class="text-3xl md:text-4xl font-black text-[#E50914] tracking-tighter cursor-pointer select-none" onclick="location.reload()">ALF-FLIX</h1>
+        <div class="text-xs md:text-sm text-zinc-400 font-bold bg-zinc-900/80 px-4 py-2 rounded-full border border-zinc-800">
+            TMDB ID: 4658
+        </div>
+    </nav>
+
+    <!-- Hero Header Grid -->
+    <div id="hero-section" class="relative h-[80vh] w-full flex items-center justify-start overflow-hidden">
+        <div class="absolute inset-0 bg-zinc-950">
+            <div class="absolute inset-0 bg-black/40 z-10"></div>
+            <div class="absolute inset-0 gradient-overlay z-20"></div>
+            <img id="hero-backdrop" src="https://placehold.co/1920x1080/141414/ffffff?text=Lade+ALF..." class="w-full h-full object-cover opacity-80" alt="ALF Banner">
+        </div>
+        <div class="relative z-30 px-6 md:px-16 max-w-3xl mt-20 select-none">
+            <h2 id="hero-title" class="text-4xl md:text-7xl font-black mb-4 tracking-tight drop-shadow-md">ALF</h2>
+            <p id="hero-overview" class="text-sm md:text-lg text-zinc-300 mb-6 leading-relaxed drop-shadow-sm line-clamp-4">Lade Informationen über den pelzigen Außerirdischen vom Planeten Melmac...</p>
+            <div class="flex flex-wrap gap-4">
+                <button onclick="startFirstEpisode()" class="bg-white hover:bg-zinc-200 text-black px-6 py-3 rounded-md font-black flex items-center gap-2 transition duration-200 text-sm md:text-base">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    Abspielen S1:E1
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="relative z-30 px-6 md:px-16 -mt-24 pb-24">
+        <!-- Season Selection tabs -->
+        <div class="flex flex-col gap-4 mb-8">
+            <h3 class="text-xl md:text-2xl font-bold text-zinc-400">Staffel auswählen</h3>
+            <div id="season-selector" class="flex flex-wrap gap-3"></div>
+        </div>
+
+        <!-- Episode Slider/Grid Title -->
+        <h3 id="current-season-title" class="text-2xl md:text-3xl font-bold mb-6 border-l-4 border-[#E50914] pl-4">Staffel 1</h3>
+        
+        <!-- Episode Grid -->
+        <div id="episode-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"></div>
+    </main>
+
+    <!-- Detail & Player Modal Overlay -->
+    <div id="player-modal" class="fixed inset-0 z-50 bg-[#141414] hidden overflow-y-auto custom-scrollbar">
+        <div class="relative w-full min-h-screen flex flex-col items-center pb-24">
+            
+            <!-- Sticky Close Header -->
+            <div class="w-full p-6 flex justify-between items-center sticky top-0 z-50 bg-gradient-to-b from-[#141414] to-transparent">
+                <button onclick="closePlayer()" class="flex items-center gap-2 text-white bg-zinc-900/90 hover:bg-[#E50914] px-5 py-2.5 rounded-full transition-all backdrop-blur-md font-bold text-sm shadow-xl border border-zinc-800">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Zurück zum Archiv
+                </button>
+            </div>
+            
+            <!-- Content Wrapper -->
+            <div class="max-w-5xl w-full px-4 md:px-6">
+                <!-- Video Wrapper -->
+                <div id="video-wrapper" class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black group border border-zinc-800">
+                    <div id="player-container" class="w-full h-full"></div>
+                    
+                    <!-- Controls (only visible on hover, elevated to not block the native player timeline) -->
+                    <div class="absolute inset-x-6 bottom-20 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity z-30 pointer-events-none">
+                        <button id="skip-btn" class="bg-black/80 hover:bg-[#E50914] text-white px-5 py-2.5 rounded-full backdrop-blur-md font-bold text-xs md:text-sm transition-all border border-zinc-700 pointer-events-auto shadow-xl hover:scale-105 active:scale-95 flex items-center gap-1">
+                            <span>+60s Skip Intro</span>
+                        </button>
+                        <button onclick="toggleFullscreen()" class="bg-black/80 hover:bg-[#E50914] p-3 rounded-full backdrop-blur-md transition-all border border-zinc-700 text-white pointer-events-auto shadow-xl hover:scale-105 active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Expanded Info Container underneath Video -->
+                <div id="info-container" class="mt-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-2">
+                            <h2 id="modal-title" class="text-3xl md:text-5xl font-black mb-4">Episodentitel</h2>
+                            <div class="flex items-center gap-4 mb-6 text-sm text-zinc-400 font-bold">
+                                <span id="modal-episode-badge" class="border border-zinc-700 px-2 py-0.5 rounded text-zinc-300">S1:E1</span>
+                                <span id="modal-rating" class="text-green-500">Rating: 100% Match</span>
+                                <span>ALF-Archiv Link</span>
+                            </div>
+                            <p id="modal-desc" class="text-zinc-300 text-base md:text-lg leading-relaxed mb-8">Beschreibung lädt...</p>
+                        </div>
+                        
+                        <!-- Fallback / Switcher Section inside Info Card -->
+                        <div class="bg-zinc-900/80 p-6 rounded-2xl border border-zinc-800 shadow-xl h-fit">
+                            <h4 class="font-bold text-white mb-3 text-sm md:text-base flex items-center gap-2">
+                                <svg class="w-5 h-5 text-[#E50914]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                Falsche Folge oder Problem?
+                            </h4>
+                            <p class="text-xs text-zinc-400 mb-4">Sollte der Dailymotion-Link nicht zur angezeigten Folge passen, wähle hier die alternative Episode dieser Staffel:</p>
+                            <select id="episode-fallback" onchange="changeEpisode(this.value)" class="w-full bg-zinc-950 text-white p-3 rounded-xl border border-zinc-800 text-sm focus:outline-none focus:border-[#E50914] cursor-pointer">
+                                <option value="">Alternative wählen...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        const ALF_DATA = {
+            "serie": "ALF",
+            "staffeln": {
+                "S1": [
+                    { "titel": "Hallo, da bin ich", "link": "https://www.dailymotion.com/video/x8d22fx" },
+                    { "titel": "Die Nacht, in der die Pizza kam", "link": "https://www.dailymotion.com/video/x8d3pd5" },
+                    { "titel": "Katzenjammer", "link": "https://www.dailymotion.com/video/x8d4l7f" },
+                    { "titel": "Großer Mann, was nun?", "link": "https://www.dailymotion.com/video/x8d4l8d" },
+                    { "titel": "Parasit mit Puderquaste", "link": "https://www.dailymotion.com/video/x8d59o7" },
+                    { "titel": "Ganz im Vertrauen", "link": "https://www.dailymotion.com/video/x8d59oa" },
+                    { "titel": "Ein Mädchen namens Rhonda", "link": "https://www.dailymotion.com/video/x8d59o2" },
+                    { "titel": "Eifersucht nach Noten", "link": "https://www.dailymotion.com/video/x8d59nz" },
+                    { "titel": "Der Sprung in die Tiefe", "link": "https://www.dailymotion.com/video/x8d59o8" },
+                    { "titel": "Die Spritztour", "link": "https://www.dailymotion.com/video/x8d22fv" },
+                    { "titel": "Fröhliche Ferien", "link": "https://www.dailymotion.com/video/x8d2yrr" },
+                    { "titel": "Eine schöne Bescherung", "link": "https://www.dailymotion.com/video/x8d2ys9" },
+                    { "titel": "Wenn Schwiegermutter kommt", "link": "https://www.dailymotion.com/video/x8d2ysj" },
+                    { "titel": "Die Fernsehfamilie", "link": "https://www.dailymotion.com/video/x8d2ysi" },
+                    { "titel": "Mit den besten Wünschen aus dem Jenseits", "link": "https://www.dailymotion.com/video/x8d2ysz" },
+                    { "titel": "Gestatten, mein Name ist Schlegel (1)", "link": "https://www.dailymotion.com/video/x8d2yuq" },
+                    { "titel": "Gestatten, mein Name ist Schlegel (2)", "link": "https://www.dailymotion.com/video/x8d2yuq" },
+                    { "titel": "Der Ausreißer", "link": "https://www.dailymotion.com/video/x8d3pcd" },
+                    { "titel": "Ein Käfig für den Narren", "link": "https://www.dailymotion.com/video/x9npxwm" },
+                    { "titel": "Der Rollentausch", "link": "https://www.dailymotion.com/video/x9npy5s" },
+                    { "titel": "Das Fenster zum Garten", "link": "https://www.dailymotion.com/video/x9npyhw" },
+                    { "titel": "Bühne frei für Spargelspitzen", "link": "https://www.dailymotion.com/video/x9npynw" },
+                    { "titel": "Schulden und Sühne", "link": "https://www.dailymotion.com/video/x9nt22q" },
+                    { "titel": "Brians Sternstunde", "link": "https://www.dailymotion.com/video/x9nt22o" },
+                    { "titel": "Der Kammerjäger und die Kakerlake", "link": "https://www.dailymotion.com/video/x9nneu4" }
+                ],
+                "S2": [
+                    { "titel": "Stets zu ihren Diensten", "link": "https://www.dailymotion.com/video/x9o21p2" },
+                    { "titel": "Reif für die Insel", "link": "https://www.dailymotion.com/video/x9o21sy" },
+                    { "titel": "Ein Schock fürs Leben", "link": "https://www.dailymotion.com/video/x9o21t0" },
+                    { "titel": "In der Kutte des Büßers", "link": "https://www.dailymotion.com/video/x9o21t4" },
+                    { "titel": "Zur besten Sendezeit", "link": "https://www.dailymotion.com/video/x9o21t2" },
+                    { "titel": "Das Kostümfest", "link": "https://www.dailymotion.com/video/x9o25bw" },
+                    { "titel": "Der Schönheitswettbewerb", "link": "https://www.dailymotion.com/video/x9o25ti" },
+                    { "titel": "Schluckauf Marke Melmac", "link": "https://www.dailymotion.com/video/x9o261u" },
+                    { "titel": "Eine Reise durch die Nacht", "link": "https://www.dailymotion.com/video/x9o26p2" },
+                    { "titel": "Paradies für Flitterwöchner", "link": "https://www.dailymotion.com/video/x9o3qt0" },
+                    { "titel": "Der Traumkandidat", "link": "https://www.dailymotion.com/video/x9o3qyc" },
+                    { "titel": "Wenn der Weihnachtsmann kommt", "link": "https://www.dailymotion.com/video/x9o3qya" },
+                    { "titel": "Der Junge von nebenan", "link": "https://www.dailymotion.com/video/x9o3rje" },
+                    { "titel": "Anwalt in eigener Sache", "link": "https://www.dailymotion.com/video/x9o3sg0" },
+                    { "titel": "Onkel Albert", "link": "https://www.dailymotion.com/video/x9o60r4" },
+                    { "titel": "Auf Verbrecherjagd – Teil 1", "link": "https://www.dailymotion.com/video/x9o60xa" },
+                    { "titel": "Auf Verbrecherjagd – Teil 2", "link": "https://www.dailymotion.com/video/x9o6144" },
+                    { "titel": "Die Untermieterin", "link": "https://www.dailymotion.com/video/x9o61a8" },
+                    { "titel": "Ein Widersacher auf vier Beinen", "link": "https://www.dailymotion.com/video/x9o61d0" },
+                    { "titel": "Auge um Auge", "link": "https://www.dailymotion.com/video/x9o61vs" },
+                    { "titel": "Die Beförderung", "link": "https://www.dailymotion.com/video/x9o623g" },
+                    { "titel": "Paules Puppenspieler", "link": "https://www.dailymotion.com/video/x9o6266" },
+                    { "titel": "Der Geist aus der Flasche", "link": "https://www.dailymotion.com/video/x9o627s" },
+                    { "titel": "Der Schritt in die Öffentlichkeit", "link": "https://www.dailymotion.com/video/x9o62fk" },
+                    { "titel": "Nebenjob gesucht", "link": "https://www.dailymotion.com/video/x9o62jw" },
+                    { "titel": "Finale", "link": "https://www.dailymotion.com/video/x8d63fl" }
+                ],
+                "S3": [
+                    { "titel": "Rendezvous gefälligst", "link": "https://www.dailymotion.com/video/x9o63ec" },
+                    { "titel": "Blick zurück nach vorn", "link": "https://www.dailymotion.com/video/x9o8ipq" },
+                    { "titel": "Nachbarschaftshilfe", "link": "https://www.dailymotion.com/video/x9o8jfa" },
+                    { "titel": "Tonight, Tonight – Teil 1", "link": "https://www.dailymotion.com/video/x9ov3f0" },
+                    { "titel": "Tonight, Tonight – Teil 2", "link": "https://www.dailymotion.com/video/x9ov3hs" },
+                    { "titel": "Reden ist Blech", "link": "https://www.dailymotion.com/video/x9oc7my" },
+                    { "titel": "Der mysteriöse Fremde – Teil 1", "link": "https://www.dailymotion.com/video/x9ospio" },
+                    { "titel": "Der mysteriöse Fremde – Teil 2", "link": "https://www.dailymotion.com/video/x9ospje" },
+                    { "titel": "Auf neuen Wegen", "link": "https://www.dailymotion.com/video/x9oswze" },
+                    { "titel": "Ein Hippie namens Willie", "link": "https://www.dailymotion.com/video/x9o8kwe" },
+                    { "titel": "Cousin Blinky", "link": "https://www.dailymotion.com/video/x9o8kyk" },
+                    { "titel": "Der Zauberlehrling", "link": "https://www.dailymotion.com/video/x9o8kuk" },
+                    { "titel": "Der Zeuge im Netz", "link": "https://www.dailymotion.com/video/x9o8l3w" },
+                    { "titel": "Ein Fall für drei", "link": "https://www.dailymotion.com/video/x9opwhe" },
+                    { "titel": "Ich und der King", "link": "https://www.dailymotion.com/video/x9oni9k" },
+                    { "titel": "Ein Baby auf Probe", "link": "https://www.dailymotion.com/video/x9opwpq" },
+                    { "titel": "Erpresser am Telefon", "link": "https://www.dailymotion.com/video/x9oc7fo" },
+                    { "titel": "Der Liebesdiener", "link": "https://www.dailymotion.com/video/x9opup8" },
+                    { "titel": "Der Pechvogel", "link": "https://www.dailymotion.com/video/x9opwz0" },
+                    { "titel": "Zwischen zwei Stühlen", "link": "https://www.dailymotion.com/video/x9ofmbc" },
+                    { "titel": "Der Herr der Ameisen", "link": "https://www.dailymotion.com/video/x9oks1a" },
+                    { "titel": "Bangemachen gilt nicht", "link": "https://www.dailymotion.com/video/x9okscw" },
+                    { "titel": "Mutter Langfinger", "link": "https://www.dailymotion.com/video/x9ofm8g" },
+                    { "titel": "Der Tramp", "link": "https://www.dailymotion.com/video/x9ofm5e" },
+                    { "titel": "Die Erde bebt", "link": "https://www.dailymotion.com/video/x9ofktu" },
+                    { "titel": "Der Geburtshelfer", "link": "https://www.dailymotion.com/video/x9ofkrq" }
+                ],
+                "S4": [
+                    { "titel": "Eric, wo bist Du?", "link": "https://www.dailymotion.com/video/x9ov4o2" },
+                    { "titel": "Mr. Universum", "link": "https://www.dailymotion.com/video/x9ov4s2" },
+                    { "titel": "Der Heiratsschwindler", "link": "https://www.dailymotion.com/video/x9p9uz8" },
+                    { "titel": "Wie gewonnen, so zerronnen", "link": "https://www.dailymotion.com/video/x9p9weu" },
+                    { "titel": "Ein Seelenkundler für den Hausgebrauch", "link": "https://www.dailymotion.com/video/x9p9xga" },
+                    { "titel": "Im Baumwollrausch", "link": "https://www.dailymotion.com/video/x9pa08o" },
+                    { "titel": "Bruder Neal", "link": "https://www.dailymotion.com/video/x9qzwm8" },
+                    { "titel": "Darf ich bekannt machen...", "link": "https://www.dailymotion.com/video/x9r00rs" },
+                    { "titel": "Alles für die Katz", "link": "https://www.dailymotion.com/video/x9pbzpc" },
+                    { "titel": "Ungebetene Gäste", "link": "https://www.dailymotion.com/video/x9pbz7o" },
+                    { "titel": "Männerwirtschaft", "link": "https://www.dailymotion.com/video/x9pc8zo" },
+                    { "titel": "Ein schwieriger Patient", "link": "https://www.dailymotion.com/video/x9pcake" },
+                    { "titel": "Die Hawaii-Party", "link": "https://www.dailymotion.com/video/x9pdxno" },
+                    { "titel": "Es war einmal ein Komiker", "link": "https://www.dailymotion.com/video/x9pdxqw" },
+                    { "titel": "In letzter Minute", "link": "https://www.dailymotion.com/video/x9pdxve" },
+                    { "titel": "Genie und Wahnsinn", "link": "https://www.dailymotion.com/video/x9pdy4u" },
+                    { "titel": "Der Jodelpriester", "link": "https://www.dailymotion.com/video/x9p9yai" },
+                    { "titel": "Blendende Aussichten", "link": "https://www.dailymotion.com/video/x9pdyam" },
+                    { "titel": "Die Seniorenparty", "link": "https://www.dailymotion.com/video/x9r00xg" },
+                    { "titel": "Auf Schatzsuche", "link": "https://www.dailymotion.com/video/x9pdzqw" },
+                    { "titel": "Der Umweltschützer", "link": "https://www.dailymotion.com/video/x9phm6o" },
+                    { "titel": "Die Wolfshungerdiät", "link": "https://www.dailymotion.com/video/x9rifmy" },
+                    { "titel": "Umzugsfreuden", "link": "https://www.dailymotion.com/video/x9pmdce" },
+                    { "titel": "Die Entscheidung", "link": "https://www.dailymotion.com/video/x9r0134" }
+                ]
+            }
+        };
+
+        const TMDB_API_KEY = 'e950e51d5d49e85f7c2f17f01eb23ba3';
+        const ALF_TMDB_ID = 4658;
+
+        let currentSeason = 'S1';
+        let currentVideoLink = '';
+        let currentVideoTime = 0;
+        let playTimer = null;
+
+        // Start initialization on window load
+        window.onload = function() {
+            initApp();
+        };
+
+        async function initApp() {
+            renderSeasonSelectors();
+            await fetchShowMetadata();
+            loadSeason('S1');
+            
+            // Navbar transparent background effect on scroll
+            window.addEventListener('scroll', () => {
+                const nav = document.getElementById('navbar');
+                if (window.scrollY > 80) {
+                    nav.classList.add('bg-zinc-950');
+                    nav.classList.remove('bg-gradient-to-b', 'from-black/80', 'to-transparent');
+                } else {
+                    nav.classList.remove('bg-zinc-950');
+                    nav.classList.add('bg-gradient-to-b', 'from-black/80', 'to-transparent');
+                }
+            });
+        }
+
+        async function fetchShowMetadata() {
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/tv/${ALF_TMDB_ID}?api_key=${TMDB_API_KEY}&language=de-DE`);
+                if (!res.ok) throw new Error("Metadata failed to load");
+                const data = await res.json();
+                
+                // Set backdrop and metadata on the Netflix layout banner
+                if (data.backdrop_path) {
+                    document.getElementById('hero-backdrop').src = `https://image.tmdb.org/t/p/original${data.backdrop_path}`;
+                }
+                document.getElementById('hero-title').innerText = data.name;
+                document.getElementById('hero-overview').innerText = data.overview || "Keine Serienbeschreibung auf TMDB gefunden.";
+            } catch (err) {
+                console.error("Fehler beim Laden der Serien-Metadaten:", err);
+                document.getElementById('hero-backdrop').src = 'https://placehold.co/1920x1080/1a1a1a/ef4444?text=ALF+Archiv';
+            }
+        }
+
+        function renderSeasonSelectors() {
+            const container = document.getElementById('season-selector');
+            container.innerHTML = '';
+            
+            Object.keys(ALF_DATA.staffeln).forEach(seasonKey => {
+                const btn = document.createElement('button');
+                btn.id = `btn-${seasonKey}`;
+                btn.className = "px-6 py-2 rounded-md font-bold text-sm bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-300 transition-all select-none duration-150";
+                btn.innerText = `Staffel ${seasonKey.replace('S', '')}`;
+                btn.onclick = () => loadSeason(seasonKey);
+                container.appendChild(btn);
+            });
+        }
+
+        function startFirstEpisode() {
+            const firstEp = ALF_DATA.staffeln['S1'][0];
+            if (firstEp) {
+                openPlayer(firstEp, 0, 'S1');
+            }
+        }
+
+        async function loadSeason(seasonKey) {
+            currentSeason = seasonKey;
+            
+            // Update UI selected state for season tabs
+            Object.keys(ALF_DATA.staffeln).forEach(k => {
+                const btn = document.getElementById(`btn-${k}`);
+                if (btn) {
+                    if (k === seasonKey) {
+                        btn.className = "px-6 py-2 rounded-md font-bold text-sm bg-[#E50914] text-white border border-[#E50914] shadow-lg transition-all select-none duration-150";
+                    } else {
+                        btn.className = "px-6 py-2 rounded-md font-bold text-sm bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-300 transition-all select-none duration-150";
+                    }
+                }
+            });
+
+            document.getElementById('current-season-title').innerText = `Staffel ${seasonKey.replace('S', '')}`;
+            const grid = document.getElementById('episode-grid');
+            grid.innerHTML = '<div class="col-span-full py-20 text-center text-zinc-400 font-bold animate-pulse">Episoden & Bilder werden geladen...</div>';
+
+            const localEpisodes = ALF_DATA.staffeln[seasonKey];
+            let tmdbEpisodes = [];
+
+            try {
+                const sNumber = seasonKey.replace('S', '');
+                const res = await fetch(`https://api.themoviedb.org/3/tv/${ALF_TMDB_ID}/season/${sNumber}?api_key=${TMDB_API_KEY}&language=de-DE`);
+                if (res.ok) {
+                    const data = await res.json();
+                    tmdbEpisodes = data.episodes || [];
+                }
+            } catch (err) {
+                console.error("TMDB-Staffelabruf fehlgeschlagen:", err);
+            }
+
+            grid.innerHTML = '';
+
+            localEpisodes.forEach((ep, index) => {
+                const tmdbEp = tmdbEpisodes[index];
+                
+                // Select still image path if it exists, otherwise fall back to placeholder
+                const stillPath = tmdbEp && tmdbEp.still_path 
+                    ? `https://image.tmdb.org/t/p/w500${tmdbEp.still_path}` 
+                    : `https://placehold.co/500x281/1c1917/ffffff?text=ALF+E${index + 1}`;
+                
+                const card = document.createElement('div');
+                card.className = "flex flex-col bg-zinc-900/40 rounded-xl overflow-hidden shadow-md border border-zinc-800 hover:border-zinc-700 cursor-pointer group transition-all duration-300 hover:scale-[1.04] hover:shadow-xl hover:bg-zinc-900";
+                
+                card.innerHTML = `
+                    <div class="relative aspect-video w-full overflow-hidden bg-zinc-950">
+                        <img src="${stillPath}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="${ep.titel}">
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div class="bg-[#E50914] p-3 rounded-full shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                <svg class="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
+                        </div>
+                        <span class="absolute bottom-2 left-2 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded text-xs font-bold text-zinc-300 border border-zinc-800">
+                            Episode ${index + 1}
+                        </span>
+                    </div>
+                    <div class="p-4 flex flex-col justify-between flex-grow">
+                        <div>
+                            <h4 class="font-bold text-base md:text-lg mb-1 group-hover:text-[#E50914] transition-colors line-clamp-1">${ep.titel}</h4>
+                            <p class="text-xs text-zinc-400 line-clamp-3 leading-relaxed mb-4">
+                                ${tmdbEp && tmdbEp.overview ? tmdbEp.overview : "Keine detaillierte Beschreibung für diese Folge auf TMDB verfügbar."}
+                            </p>
+                        </div>
+                        <div class="text-[11px] uppercase tracking-wider font-bold text-zinc-500">
+                            ${tmdbEp && tmdbEp.air_date ? `Gesendet: ${tmdbEp.air_date}` : 'ALF Klassiker'}
+                        </div>
+                    </div>
+                `;
+
+                card.onclick = () => openPlayer(ep, index, seasonKey, tmdbEp);
+                grid.appendChild(card);
+            });
+        }
+
+        function openPlayer(ep, index, seasonKey, tmdbEp = null) {
+            const modal = document.getElementById('player-modal');
+            currentSeason = seasonKey;
+            currentVideoLink = ep.link;
+            
+            // Build detailed overview
+            const sNum = seasonKey.replace('S', '');
+            const epNum = index + 1;
+            
+            document.getElementById('modal-title').innerText = ep.titel;
+            document.getElementById('modal-episode-badge').innerText = `S${sNum}:E${epNum}`;
+            document.getElementById('modal-desc').innerText = tmdbEp && tmdbEp.overview 
+                ? tmdbEp.overview 
+                : "Keine deutsche Beschreibung verfügbar. Aber du kannst die Episode jetzt sofort oben streamen.";
+
+            // Standard timer logic for virtual seek
+            currentVideoTime = 0;
+            if (playTimer) clearInterval(playTimer);
+            playTimer = setInterval(() => {
+                currentVideoTime++;
+            }, 1000);
+
+            // Populate the Fallback Switcher Dropdown
+            const fallbackSelector = document.getElementById('episode-fallback');
+            fallbackSelector.innerHTML = '<option value="">Alternative Episode wählen...</option>';
+            
+            ALF_DATA.staffeln[seasonKey].forEach((item, idx) => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify({ ep: item, index: idx });
+                option.text = `E${idx + 1}: ${item.titel}`;
+                if (item.titel === ep.titel) {
+                    option.selected = true;
+                }
+                fallbackSelector.appendChild(option);
+            });
+
+            // Start player embed
+            playVideo(ep.link, 0);
+
+            // Set Skip Intro logic
+            document.getElementById('skip-btn').onclick = () => {
+                currentVideoTime += 60;
+                playVideo(ep.link, currentVideoTime);
+            };
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function playVideo(link, startSeconds = 0) {
+            const container = document.getElementById('player-container');
+            const videoId = link.split('/').pop();
+            const startParam = startSeconds > 0 ? `&start=${startSeconds}` : '';
+            
+            // Embed utilizing the requested geo.dailymotion.com layout
+            container.innerHTML = `
+                <iframe 
+                    class="w-full h-full border-0" 
+                    src="https://geo.dailymotion.com/player.html?video=${videoId}&autoplay=1${startParam}" 
+                    allowfullscreen 
+                    allow="autoplay; fullscreen; picture-in-picture">
+                </iframe>
+            `;
+        }
+
+        function toggleFullscreen() {
+            const elem = document.getElementById('video-wrapper');
+            if (!document.fullscreenElement) {
+                elem.requestFullscreen().catch(err => {
+                    console.error("Fehler beim Wechsel in Vollbildmodus:", err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function changeEpisode(jsonStr) {
+            if (!jsonStr) return;
+            const data = JSON.parse(jsonStr);
+            openPlayer(data.ep, data.index, currentSeason);
+        }
+
+        function closePlayer() {
+            if (playTimer) clearInterval(playTimer);
+            document.getElementById('player-modal').classList.add('hidden');
+            document.getElementById('player-container').innerHTML = "";
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
