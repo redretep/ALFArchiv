@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALF Archive Player</title>
+    <title>ALF Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
@@ -17,8 +17,14 @@
         .bg-main {
             background-color: #121212;
         }
+        .track-row {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         .track-row:hover {
-            background-color: rgba(255, 255, 255, 0.07);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        .track-row.active {
+            background-color: rgba(29, 185, 84, 0.1);
         }
         .track-row.active .track-title-text {
             color: #1DB954;
@@ -27,8 +33,11 @@
             width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
         #loading-indicator {
             position: fixed;
@@ -39,58 +48,133 @@
             background-color: #1DB954;
             z-index: 100;
             transition: width 0.3s ease, opacity 0.3s ease;
-            box-shadow: 0 0 10px #1DB954;
+            box-shadow: 0 0 12px #1DB954;
         }
         input[type="range"] {
             accent-color: #1DB954;
             cursor: pointer;
             height: 4px;
         }
+        
+        /* Audio visualizer bar animation */
+        .eq-bar {
+            width: 3px;
+            background-color: #1DB954;
+            animation: bounce 0.8s ease-in-out infinite alternate;
+        }
+        .eq-bar:nth-child(2) { animation-delay: 0.2s; }
+        .eq-bar:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bounce {
+            0% { height: 3px; }
+            100% { height: 16px; }
+        }
+
+        /* Toast Notifications Styling */
+        #toast-container {
+            position: fixed;
+            bottom: 110px;
+            right: 20px;
+            z-index: 999;
+            display: flex;
+            flex-col: reverse;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: #282828;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #1DB954;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideIn 0.3s forwards;
+            pointer-events: auto;
+            max-width: 320px;
+        }
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+        @keyframes slideIn {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
+    <!-- Top glowing border/loading bar -->
     <div id="loading-indicator"></div>
+
+    <!-- Active Toast Notifications Container -->
+    <div id="toast-container"></div>
 
     <div class="flex flex-1 overflow-hidden">
         <main class="flex-1 flex flex-col overflow-hidden bg-main relative">
             
             <div class="relative flex-1 overflow-y-auto custom-scrollbar" id="scroll-container">
-                <header class="p-8 flex flex-col md:flex-row items-end space-y-4 md:space-y-0 md:space-x-6 pt-16 bg-[#121212]">
-                    <div class="w-48 h-48 md:w-56 md:h-56 shadow-2xl bg-zinc-800 flex items-center justify-center overflow-hidden rounded-md">
-                        <img id="album-art" src="https://i.pinimg.com/736x/b7/41/6e/b7416eadda070a5c8553d4c463423b08.jpg" alt="ALF Cover" class="w-full h-full object-cover">
+                <!-- Header panel -->
+                <header class="p-8 flex flex-col md:flex-row items-end space-y-4 md:space-y-0 md:space-x-6 pt-16 bg-gradient-to-b from-zinc-800/40 to-[#121212]">
+                    <div class="w-48 h-48 md:w-56 md:h-56 shadow-2xl bg-zinc-800 flex items-center justify-center overflow-hidden rounded-lg border border-white/5 group relative">
+                        <img id="album-art" src="https://i.pinimg.com/736x/b7/41/6e/b7416eadda070a5c8553d4c463423b08.jpg" alt="ALF Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     </div>
                     <div class="flex flex-col space-y-2">
-                        <span class="text-xs font-bold uppercase tracking-widest text-zinc-400">kostenlos und legal</span>
-                        <h1 class="text-4xl md:text-7xl font-black tracking-tighter" id="album-title">ALF Hörspiele</h1>
-                        <div class="flex items-center space-x-2 text-sm font-medium">
-                            <span class="text-green-500">pidi</span>
-                            <span class="text-gray-400">• <span id="track-count">0</span> episodes</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-green-500">Kostenlos &amp; Streambar</span>
+                        <h1 class="text-4xl md:text-6xl font-black tracking-tighter" id="album-title">ALF Hörspiele</h1>
+                        <div class="flex items-center space-x-2 text-sm font-medium text-zinc-400">
+                            <span>In-Memory Fileditch Cloud Streamer</span>
+                            <span>•</span>
+                            <span id="track-count" class="text-white font-semibold">0</span> <span id="track-count-label">Episoden</span>
                         </div>
                     </div>
                 </header>
 
-                <div class="p-8 flex items-center space-x-4">
-                    <button id="master-play" class="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform active:scale-95">
-                        <i data-lucide="play" class="fill-black text-black ml-1"></i>
-                    </button>
-                    <a id="download-zip" href="#" target="_blank" class="flex items-center space-x-2 px-6 py-2 border border-zinc-600 rounded-full text-sm font-bold hover:border-white transition-colors">
-                        <i data-lucide="download" class="w-4 h-4"></i>
-                        <span>DOWNLOAD</span>
-                    </a>
+                <!-- Audio control buttons & Search bar -->
+                <div class="px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <button id="master-play" class="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform">
+                            <i data-lucide="play" class="fill-black text-black ml-1 w-6 h-6"></i>
+                        </button>
+                        <a id="download-zip" href="https://github.com/redretep/ALFArchiv" target="_blank" class="flex items-center space-x-2 px-6 py-3 border border-zinc-700 hover:border-zinc-400 rounded-full text-xs font-bold hover:bg-zinc-800 transition-colors">
+                            <i data-lucide="github" class="w-4 h-4 text-zinc-400"></i>
+                            <span>GITHUB SOURCE</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Realtime Episode Search Bar -->
+                    <div class="relative max-w-xs w-full">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-zinc-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="search-input" placeholder="Folge suchen..." class="w-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-all">
+                    </div>
                 </div>
 
-                <div class="px-8 pb-24">
-                    <div class="grid grid-cols-[32px_1fr_80px_40px] md:grid-cols-[32px_1fr_100px_80px_40px] gap-4 px-4 py-2 text-zinc-400 text-xs font-bold border-b border-white/5 sticky top-0 bg-[#121212] z-10 mb-4">
-                        <span>#</span>
-                        <span>NAME</span>
-                        <span class="hidden md:block">SIZE</span>
-                        <span class="flex justify-end"><i data-lucide="clock" class="w-4 h-4"></i></span>
+                <!-- Playlist/Table listing -->
+                <div class="px-8 pb-32">
+                    <div class="grid grid-cols-[32px_1fr_90px_60px_40px] gap-4 px-4 py-2 text-zinc-400 text-xs font-bold border-b border-white/5 sticky top-0 bg-[#121212] z-10 mb-4">
+                        <span class="text-center">#</span>
+                        <span>TITEL</span>
+                        <span class="text-right">GRÖSSE</span>
+                        <span class="text-center">FORMAT</span>
                         <span></span>
                     </div>
                     <div id="track-list" class="space-y-1">
-                        <div class="flex flex-col items-center justify-center py-20 text-zinc-500">
+                        <!-- Loading spinner -->
+                        <div class="flex flex-col items-center justify-center py-24 text-zinc-500">
                             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-4"></div>
-                            <p>lade...</p>
+                            <p>Sammle Upload-Katalog von GitHub...</p>
                         </div>
                     </div>
                 </div>
@@ -98,98 +182,144 @@
         </main>
     </div>
 
-    <footer class="h-24 bg-black border-t border-zinc-900 px-4 flex items-center justify-between z-20">
-        <!-- Left: Now Playing -->
-        <div class="flex items-center space-x-4 w-[30%]">
-            <div class="hidden sm:block w-14 h-14 bg-zinc-800 rounded flex-shrink-0 overflow-hidden shadow-lg">
-                <img id="now-playing-img" src="https://archive.org/services/img/alfhoerspiele" class="w-full h-full object-cover" alt="Track">
+    <!-- Sticky Audio Player Footer Control Deck -->
+    <footer class="h-24 bg-black border-t border-zinc-900 px-4 md:px-8 flex items-center justify-between z-20">
+        <!-- Left details block: Now playing metadata -->
+        <div class="flex items-center space-x-4 w-[35%] sm:w-[30%]">
+            <div class="hidden sm:block w-14 h-14 bg-zinc-800 rounded flex-shrink-0 overflow-hidden shadow-lg border border-white/5">
+                <img id="now-playing-img" src="https://i.pinimg.com/736x/b7/41/6e/b7416eadda070a5c8553d4c463423b08.jpg" class="w-full h-full object-cover" alt="Track">
             </div>
             <div class="flex flex-col min-w-0">
                 <span id="current-title" class="text-sm font-semibold truncate text-white">Spiele eine Folge</span>
-                <span class="text-[11px] text-zinc-400 truncate">ALF-Archiv</span>
+                <span id="player-current-status" class="text-[11px] text-zinc-400 truncate">ALF Archiv</span>
             </div>
         </div>
 
-        <!-- Center: Controls -->
+        <!-- Center Details Block: Core Audio controls + progress track -->
         <div class="flex flex-col items-center w-[40%] max-w-xl">
             <div class="flex items-center space-x-6 mb-2">
-                <button id="prev-btn" class="text-zinc-400 hover:text-white transition-colors">
+                <button id="prev-btn" class="text-zinc-400 hover:text-white transition-colors" title="Vorherige Folge">
                     <i data-lucide="skip-back" class="w-5 h-5 fill-current"></i>
                 </button>
-                <button id="play-pause-btn" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-md">
+                <button id="play-pause-btn" class="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-md">
                     <i data-lucide="play" class="w-5 h-5 fill-black text-black ml-0.5"></i>
                 </button>
-                <button id="next-btn" class="text-zinc-400 hover:text-white transition-colors">
+                <button id="next-btn" class="text-zinc-400 hover:text-white transition-colors" title="Nächste Folge">
                     <i data-lucide="skip-forward" class="w-5 h-5 fill-current"></i>
                 </button>
             </div>
             <div class="flex items-center space-x-2 w-full">
-                <span id="current-time" class="text-[10px] text-zinc-500 min-w-[30px] text-right">0:00</span>
+                <span id="current-time" class="text-[10px] text-zinc-500 min-w-[35px] text-right">0:00</span>
                 <input type="range" id="progress-slider" min="0" max="100" value="0" class="flex-1">
-                <span id="duration" class="text-[10px] text-zinc-500 min-w-[30px]">0:00</span>
+                <span id="duration" class="text-[10px] text-zinc-500 min-w-[35px]">0:00</span>
             </div>
         </div>
 
-        <!-- Right: Volume -->
-        <div class="flex items-center justify-end space-x-3 w-[30%]">
-            <i data-lucide="volume-2" class="w-4 h-4 text-zinc-400"></i>
+        <!-- Right Side: Volume Adjustment Deck -->
+        <div class="flex items-center justify-end space-x-3 w-[25%] sm:w-[30%]">
+            <button id="mute-toggle" class="text-zinc-400 hover:text-white transition-colors">
+                <i id="volume-icon" data-lucide="volume-2" class="w-4 h-4"></i>
+            </button>
             <input type="range" id="volume-slider" min="0" max="100" value="70" class="w-16 md:w-24">
         </div>
     </footer>
 
+    <!-- Native Invisible Audio Host -->
     <audio id="audio-player"></audio>
 
     <script>
-        const identifier = 'alfhoerspiele';
-        const metadataUrl = `https://archive.org/metadata/${identifier}`;
-        const downloadUrl = `https://archive.org/download/${identifier}`;
-        
+        // GitHub Upload Database JSON 
+        const jsonDatabaseUrl = 'https://redretep.github.io/ALFArchiv/fileditch_uploads.json';
+    
+        // Native Element References
         const audio = document.getElementById('audio-player');
         const trackListContainer = document.getElementById('track-list');
         const currentTitleEl = document.getElementById('current-title');
+        const currentStatusEl = document.getElementById('player-current-status');
         const playPauseBtn = document.getElementById('play-pause-btn');
         const masterPlayBtn = document.getElementById('master-play');
         const progressSlider = document.getElementById('progress-slider');
         const volumeSlider = document.getElementById('volume-slider');
+        const volumeIconEl = document.getElementById('volume-icon');
+        const muteToggleBtn = document.getElementById('mute-toggle');
         const currentTimeEl = document.getElementById('current-time');
         const durationEl = document.getElementById('duration');
         const nextBtn = document.getElementById('next-btn');
         const prevBtn = document.getElementById('prev-btn');
         const loadingIndicator = document.getElementById('loading-indicator');
-        const zipBtn = document.getElementById('download-zip');
+        const searchInput = document.getElementById('search-input');
+        const toastContainer = document.getElementById('toast-container');
 
-        let tracks = [];
-        let currentIndex = -1;
-        let isPlaying = false;
+        // State Tracking Data Models
+        let tracks = [];           // Raw full parsed catalogue
+        let filteredTracks = [];   // Search filtered catalogue
+        let currentIndex = -1;     // Active matching index inside filteredTracks
+        let isPlaying = false;     // Play state
+        let isMuted = false;       // Mute state
+        let savedVolume = 0.7;     // Keep volume saved in temporary cache
+        let isResolving = false;   // Network fetch state guard
 
-        async function fetchArchiveData() {
+        // Fetch Upload schema from GitHub
+        async function fetchCatalogueData() {
             setLoading(30);
             try {
-                const response = await fetch(metadataUrl);
-                const data = await response.json();
+                const response = await fetch(jsonDatabaseUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to load. Status: ${response.status}`);
+                }
+                const rawData = await response.json();
                 
-                // Filtering for MP3s and applying natural alphanumeric sort
-                tracks = data.files
-                    .filter(file => file.format === 'VBR MP3' || file.format === 'MP3')
-                    .sort((a, b) => {
-                        const nameA = a.title || a.name;
-                        const nameB = b.title || b.name;
-                        return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+                // Extract track array safely
+                if (rawData && rawData.ALF) {
+                    tracks = rawData.ALF.map(file => {
+                        return {
+                            name: file.filename,
+                            title: formatFilenameToTitle(file.filename),
+                            url: file.url,
+                            size: file.size,
+                            timestamp: file.timestamp
+                        };
                     });
+                } else {
+                    throw new Error("Invalid database format. missing 'ALF' node.");
+                }
 
+                // Natural alphabetical alphanumeric sort
+                tracks.sort((a, b) => {
+                    return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
+                });
+
+                // Update track total indicators
+                filteredTracks = [...tracks];
                 document.getElementById('track-count').innerText = tracks.length;
-                
-                // Set zip link - Archive.org typically provides a zip for the original files
-                zipBtn.href = `${downloadUrl}/${identifier}_vbr_mp3.zip`;
                 
                 renderTracks();
                 setLoading(100);
+                showToast("Mediathek erfolgreich geladen!", "success");
             } catch (error) {
-                console.error("Fetch Error:", error);
-                trackListContainer.innerHTML = `<p class="text-red-500 text-center py-10">Archive unavailable. Try again later.</p>`;
+                console.error("Database parsing error:", error);
+                trackListContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-red-500 space-y-4">
+                        <i data-lucide="alert-circle" class="w-12 h-12"></i>
+                        <p class="text-center font-semibold">ALF Datenbank konnte nicht geladen werden.</p>
+                        <p class="text-xs text-zinc-500">${error.message}</p>
+                        <button onclick="fetchCatalogueData()" class="px-6 py-2 bg-zinc-800 text-white rounded-full font-bold text-xs hover:bg-zinc-700 transition-colors">Erneut versuchen</button>
+                    </div>`;
+                lucide.createIcons();
+                setLoading(100);
             }
         }
 
+        // Parse and beautify titles from the raw file names
+        function formatFilenameToTitle(filename) {
+            if (!filename) return "Unbekannte Episode";
+            let clean = filename.replace(/\.[^/.]+$/, ""); // strip extension
+            clean = clean.replace(/_/g, " ");               // spaces instead of underscores
+            clean = clean.replace(/%20/g, " ");             // clean uri spaces
+            return clean;
+        }
+
+        // Handle progressive top loader actions
         function setLoading(percent) {
             loadingIndicator.style.opacity = '1';
             loadingIndicator.style.width = percent + '%';
@@ -201,77 +331,236 @@
             }
         }
 
+        // Display beautiful in-screen Toast Alerts
+        function showToast(message, type = "info") {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            
+            let iconName = "info";
+            if (type === "success") iconName = "check-circle";
+            if (type === "error") iconName = "alert-triangle";
+            
+            toast.innerHTML = `
+                <i data-lucide="${iconName}" class="w-4 h-4 flex-shrink-0"></i>
+                <span class="truncate">${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+            
+            // Auto-destruction of toast element
+            setTimeout(() => {
+                toast.style.animation = "slideIn 0.3s reverse forwards";
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Render Tracks to Dom with Search Filters & Animated EQ indicator
         function renderTracks() {
             trackListContainer.innerHTML = '';
-            tracks.forEach((track, index) => {
-                const title = track.title || track.name.replace('.mp3', '').replace(/_/g, ' ');
-                const fileUrl = `${downloadUrl}/${track.name}`;
+            
+            if (filteredTracks.length === 0) {
+                trackListContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-zinc-500">
+                        <i data-lucide="music" class="w-10 h-10 mb-2"></i>
+                        <p class="text-sm">Keine Episoden gefunden.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            filteredTracks.forEach((track, index) => {
+                const isActive = (currentIndex !== -1 && filteredTracks[currentIndex].url === track.url);
+                const sizeInMB = track.size ? (track.size / 1024 / 1024).toFixed(1) : "---";
                 const row = document.createElement('div');
-                row.className = 'track-row grid grid-cols-[32px_1fr_80px_40px] md:grid-cols-[32px_1fr_100px_80px_40px] gap-4 px-4 py-2 rounded-md group cursor-pointer transition-colors items-center';
+                row.className = `track-row grid grid-cols-[32px_1fr_90px_60px_40px] gap-4 px-4 py-3 rounded-md group cursor-pointer items-center ${isActive ? 'active' : ''}`;
                 
+                // Track Index, Play trigger, or Animated EQ Visualizer
+                let statusIconHtml = `<span class="text-zinc-500 group-hover:hidden text-xs font-semibold">${index + 1}</span>`;
+                if (isActive) {
+                    if (isPlaying) {
+                        statusIconHtml = `
+                            <div class="flex items-end justify-center space-x-[2px] h-4 w-4 group-hover:hidden">
+                                <span class="eq-bar h-1"></span>
+                                <span class="eq-bar h-1"></span>
+                                <span class="eq-bar h-1"></span>
+                            </div>
+                        `;
+                    } else {
+                        statusIconHtml = `<i data-lucide="play" class="w-3.5 h-3.5 text-green-500 group-hover:hidden fill-green-500"></i>`;
+                    }
+                }
+                statusIconHtml += `<i data-lucide="play" class="w-3.5 h-3.5 text-white hidden group-hover:block fill-white mx-auto"></i>`;
+
                 row.innerHTML = `
-                    <div class="flex items-center">
-                        <span class="text-zinc-500 group-hover:hidden text-xs">${index + 1}</span>
-                        <i data-lucide="play" class="w-3 h-3 text-white hidden group-hover:block fill-white"></i>
+                    <div class="flex items-center justify-center">
+                        ${statusIconHtml}
                     </div>
-                    <span class="text-zinc-200 truncate font-medium track-title-text text-sm">${title}</span>
-                    <span class="text-zinc-500 text-xs hidden md:block">${(track.size / 1024 / 1024).toFixed(1)} MB</span>
-                    <span class="text-zinc-500 text-xs flex justify-end">MP3</span>
+                    <span class="text-zinc-200 truncate font-semibold track-title-text text-sm" title="${track.title}">${track.title}</span>
+                    <span class="text-zinc-500 text-xs text-right font-medium">${sizeInMB} MB</span>
+                    <span class="text-zinc-500 text-xs text-center font-bold tracking-wider">MP3</span>
                     <div class="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                        <a href="${fileUrl}" download="${track.name}" class="text-zinc-400 hover:text-white" onclick="event.stopPropagation()">
+                        <button id="dl-btn-${index}" class="text-zinc-400 hover:text-white" title="Herunterladen">
                             <i data-lucide="download" class="w-4 h-4"></i>
-                        </a>
+                        </button>
                     </div>
                 `;
+                
+                // Row interactions
                 row.onclick = () => loadTrack(index);
+                
+                // Bind Download trigger on the specific action button inside row
+                const dlButton = row.querySelector(`#dl-btn-${index}`);
+                if (dlButton) {
+                    dlButton.onclick = (e) => {
+                        e.stopPropagation();
+                        downloadTrack(track);
+                    };
+                }
+
                 trackListContainer.appendChild(row);
             });
+            
             lucide.createIcons();
         }
 
-        function loadTrack(index) {
-            if (index < 0 || index >= tracks.length) return;
-            setLoading(50);
-            currentIndex = index;
-            const track = tracks[index];
-            audio.src = `${downloadUrl}/${track.name}`;
-            currentTitleEl.innerText = track.title || track.name.replace('.mp3', '').replace(/_/g, ' ');
+        // Fileditch Decryptor logic utilizing the api.pidi.workers.dev workers proxy
+        async function resolveFileditchUrl(inputUrl) {
+            let resolvedUrl = inputUrl;
             
-            document.querySelectorAll('.track-row').forEach((row, i) => {
-                row.classList.toggle('active', i === index);
-            });
+            // Re-apply original parameters if sharing hashes are encountered
+            if (inputUrl) {
+                const hashIndex = inputUrl.indexOf('#');
+                if (hashIndex !== -1) {
+                    const filePath = inputUrl.substring(hashIndex).replace(/^#+/, '').replace(/^\/+/, '');
+                    resolvedUrl = `https://fileditchfiles.me/file.php?f=/${filePath}`;
+                } else if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
+                    const filePath = inputUrl.replace(/^\/+/, '');
+                    resolvedUrl = `https://fileditchfiles.me/file.php?f=/${filePath}`;
+                }
+            }
 
-            audio.oncanplay = () => {
-                setLoading(100);
-                playTrack();
-            };
+            const proxyUrl = `https://api.pidi.workers.dev/?url=${encodeURIComponent(resolvedUrl)}`;
+            const response = await fetch(proxyUrl);
+            if (!response.ok) {
+                throw new Error(`Proxy replied with status code: ${response.status}`);
+            }
+
+            const htmlText = await response.text();
+            
+            // Match strings containing md5= up until the closing quote or space
+            const urlRegex = /(https:\/\/[^"\s>]+[\?&]md5=[^"\s>]+)/;
+            const match = htmlText.match(urlRegex);
+
+            if (match && match[1]) {
+                // Decode all HTML entities perfectly
+                let streamUrl = decodeHtmlEntities(match[1]);
+                // Clean up trailing quotes
+                streamUrl = streamUrl.replace(/['"]+$/, '');
+                return streamUrl;
+            } else {
+                throw new Error("Stream URL was not parsed in the page source code.");
+            }
         }
 
+        // Helper: HTML Entity Decoder
+        function decodeHtmlEntities(str) {
+            const txt = document.createElement('textarea');
+            txt.innerHTML = str;
+            return txt.value;
+        }
+
+        // Load targeted track indices
+        async function loadTrack(index) {
+            if (index < 0 || index >= filteredTracks.length) return;
+            if (isResolving) {
+                showToast("Bitte warten, Verbindung wird aufgebaut...", "info");
+                return;
+            }
+
+            isResolving = true;
+            currentIndex = index;
+            const track = filteredTracks[index];
+
+            // Render interim resolving updates to UI
+            setLoading(30);
+            currentTitleEl.innerText = "Verbindung wird aufgebaut...";
+            currentStatusEl.innerText = "Löse Fileditch Direktverbindung auf...";
+            showToast(`Lade "${track.title}"...`, "info");
+            
+            renderTracks(); // update active class immediately
+
+            try {
+                setLoading(60);
+                const streamUrl = await resolveFileditchUrl(track.url);
+                
+                audio.src = streamUrl;
+                currentTitleEl.innerText = track.title;
+                currentStatusEl.innerText = "ALF Stream";
+
+                audio.oncanplay = () => {
+                    setLoading(100);
+                    isResolving = false;
+                    playTrack();
+                };
+            } catch (error) {
+                setLoading(100);
+                isResolving = false;
+                console.error("Resolution failed: ", error);
+                showToast("Fehler: Fileditch-Stream konnte nicht dekodiert werden.", "error");
+                currentTitleEl.innerText = "Fehler beim Laden";
+                currentStatusEl.innerText = "Stream Fehler";
+                renderTracks();
+            }
+        }
+
+        // Trigger safe track downlaoding bypassing standard sandbox contexts
+        async function downloadTrack(track) {
+            showToast(`Sammle Download-Link für "${track.title}"...`, "info");
+            try {
+                const streamUrl = await resolveFileditchUrl(track.url);
+                window.open(streamUrl, '_blank');
+                showToast("Herunterladen gestartet!", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Verbindung konnte nicht aufgelöst werden.", "error");
+            }
+        }
+
+        // Play/Pause Deck Controls
         function playTrack() {
             audio.play().then(() => {
                 isPlaying = true;
-                updateUI();
-            }).catch(e => console.warn("Playback error", e));
+                updatePlaybackControls();
+                renderTracks();
+            }).catch(e => {
+                console.warn("Playback error block standard autoplay contexts: ", e);
+                isPlaying = false;
+                updatePlaybackControls();
+            });
         }
 
         function pauseTrack() {
             audio.pause();
             isPlaying = false;
-            updateUI();
+            updatePlaybackControls();
+            renderTracks();
         }
 
-        function updateUI() {
+        // Update overall button interfaces dynamically
+        function updatePlaybackControls() {
             const iconName = isPlaying ? 'pause' : 'play';
             
-            // Footer Icon
+            // Footer Deck Control Icon update
             playPauseBtn.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5 fill-black text-black ${iconName === 'play' ? 'ml-0.5' : ''}"></i>`;
             
-            // Master Icon
-            masterPlayBtn.innerHTML = `<i data-lucide="${iconName}" class="fill-black text-black ${iconName === 'play' ? 'ml-1' : ''}"></i>`;
+            // Header Big play button icon update
+            masterPlayBtn.innerHTML = `<i data-lucide="${iconName}" class="fill-black text-black ${iconName === 'play' ? 'ml-1' : ''} w-6 h-6"></i>`;
             
             lucide.createIcons();
         }
 
+        // Format seconds into minutes/seconds display strings
         function formatTime(s) {
             if (isNaN(s)) return "0:00";
             const m = Math.floor(s / 60);
@@ -279,21 +568,60 @@
             return `${m}:${sec < 10 ? '0' : ''}${sec}`;
         }
 
-        playPauseBtn.onclick = () => currentIndex === -1 ? loadTrack(0) : (isPlaying ? pauseTrack() : playTrack());
+        // Search engine logic
+        searchInput.oninput = () => {
+            const query = searchInput.value.toLowerCase().trim();
+            const previouslyActiveTrack = currentIndex !== -1 ? filteredTracks[currentIndex] : null;
+
+            if (query === '') {
+                filteredTracks = [...tracks];
+            } else {
+                filteredTracks = tracks.filter(t => t.title.toLowerCase().includes(query));
+            }
+
+            // Sync indices with new lists
+            if (previouslyActiveTrack) {
+                currentIndex = filteredTracks.findIndex(t => t.url === previouslyActiveTrack.url);
+            } else {
+                currentIndex = -1;
+            }
+
+            document.getElementById('track-count').innerText = filteredTracks.length;
+            document.getElementById('track-count-label').innerText = filteredTracks.length === 1 ? "Episode" : "Episoden";
+            renderTracks();
+        };
+
+        // Master Deck Button events
+        playPauseBtn.onclick = () => {
+            if (currentIndex === -1) {
+                loadTrack(0);
+            } else {
+                isPlaying ? pauseTrack() : playTrack();
+            }
+        };
         masterPlayBtn.onclick = playPauseBtn.onclick;
 
         nextBtn.onclick = () => {
-            if (currentIndex < tracks.length - 1) loadTrack(currentIndex + 1);
-        };
-
-        prevBtn.onclick = () => {
-            if (audio.currentTime > 3) {
-                audio.currentTime = 0;
-            } else if (currentIndex > 0) {
-                loadTrack(currentIndex - 1);
+            if (filteredTracks.length === 0) return;
+            if (currentIndex < filteredTracks.length - 1) {
+                loadTrack(currentIndex + 1);
+            } else {
+                showToast("Das ist das Ende der Liste.", "info");
             }
         };
 
+        prevBtn.onclick = () => {
+            if (filteredTracks.length === 0) return;
+            if (audio.currentTime > 4) {
+                audio.currentTime = 0;
+            } else if (currentIndex > 0) {
+                loadTrack(currentIndex - 1);
+            } else {
+                showToast("Das ist der erste Titel.", "info");
+            }
+        };
+
+        // Audio Player Observers
         audio.ontimeupdate = () => {
             if (audio.duration) {
                 progressSlider.value = (audio.currentTime / audio.duration) * 100;
@@ -306,13 +634,16 @@
         };
 
         audio.onended = () => {
-            if (currentIndex < tracks.length - 1) nextBtn.onclick();
-            else {
+            if (currentIndex < filteredTracks.length - 1) {
+                nextBtn.onclick();
+            } else {
                 isPlaying = false;
-                updateUI();
+                updatePlaybackControls();
+                renderTracks();
             }
         };
 
+        // UI Sliders Action Listeners
         progressSlider.oninput = () => {
             if (audio.duration) {
                 audio.currentTime = (progressSlider.value / 100) * audio.duration;
@@ -321,10 +652,42 @@
 
         volumeSlider.oninput = () => {
             audio.volume = volumeSlider.value / 100;
+            savedVolume = audio.volume;
+            if (audio.volume === 0) {
+                isMuted = true;
+            } else {
+                isMuted = false;
+            }
+            updateVolumeIcon();
         };
 
+        // Mute Deck Action toggle
+        muteToggleBtn.onclick = () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                audio.volume = 0;
+                volumeSlider.value = 0;
+            } else {
+                audio.volume = savedVolume;
+                volumeSlider.value = savedVolume * 100;
+            }
+            updateVolumeIcon();
+        };
+
+        function updateVolumeIcon() {
+            let iconName = 'volume-2';
+            if (audio.volume === 0 || isMuted) {
+                iconName = 'volume-x';
+            } else if (audio.volume < 0.4) {
+                iconName = 'volume-1';
+            }
+            muteToggleBtn.innerHTML = `<i id="volume-icon" data-lucide="${iconName}" class="w-4 h-4 text-zinc-400 hover:text-white"></i>`;
+            lucide.createIcons();
+        }
+
+        // On Boot Initialisations
         window.onload = () => {
-            fetchArchiveData();
+            fetchCatalogueData();
             audio.volume = 0.7;
             lucide.createIcons();
         };
